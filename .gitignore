@@ -1,0 +1,9 @@
+/target/
+/node_modules/
+.idea
+.settings
+logs
+*.iml
+.project
+.classpath
+/config/
