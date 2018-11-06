@@ -1,0 +1,24 @@
+{
+  "name": "ming_mysql_client",
+  "version": "1.0.0",
+  "description": "用easyUi实现的简易mysql Client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minglie/ming_mysql_client.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/minglie/ming_mysql_client/issues"
+  },
+  "homepage": "https://github.com/minglie/ming_mysql_client#readme",
+  "dependencies": {
+    "ming_node": "0.0.26",
+    "mysql": "^2.16.0"
+  }
+}
