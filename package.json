@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/minglie/ming_mysql_client#readme",
   "dependencies": {
-    "ming_node": "0.0.26",
+    "ming_node": "^0.1.5",
     "mysql": "^2.16.0"
   }
 }

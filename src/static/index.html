@@ -4,189 +4,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>通用表</title>
+    <title>index</title>
     <link rel="stylesheet" type="text/css" href="http://www.jeasyui.net/Public/js/easyui/themes/default/easyui.css">
     <link rel="stylesheet" type="text/css" href="http://www.jeasyui.net/Public/js/easyui/themes/icon.css">
-    <style type="text/css">
-        textarea {
-            font-size: 18px;
-            /*float: left;*/
-        }
-
-        #text_input {
-            width: 50%;
-            line-height: 1;
-            background: rgba(100, 200, 50, 0.3);
-
-        }
-        #text_output {
-            color: blue;
-            width: 100%;
-            line-height: 1;
-            background:rgba(200,100,50,0.3);
-        }
-
-    </style>
     <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
-    <script type="text/javascript" src="https://minglie.github.io/public/js/jquery.easyui.min.js"></script>
-    <script src="http://cdn.staticfile.org/artTemplate.js/3.0.1/template.js"></script>
-
+    <script type="text/javascript" src="https://jihefu.github.io/js/jquery.easyui.min.js"></script>
+    <script src="https://minglie.github.io/js/M_mock.js"></script>
     <script>
-        var gloab_base_url="http://localhost:8889";
-     </script>
-</head>
-<body>
+        /**
+         *后台服务开始
+         */
+        M.host = "http://localhost:8888";
+        M.tableInfo = [];
+        M.currentTableName = "";
+        M.databaseName = "ming-lie"
+        app.post("/listByPage", function (req, res) {
+            if (!M.currentTableName) {
+                res.send([])
+                return;
+            }
+            const sql = `
+        select * from ${M.currentTableName}  limit ${(req.params.page - 1) * req.params.rows},${req.params.rows};
+        select count(1) c from ${M.currentTableName};
+        `;
 
-<div id="tableNameList"></div>
+            M.doSql(sql, (d) => {
+                rows = d.data[0];
+                total = d.data[1][0].c;
+                res.send({rows, total});
+            })
 
-<script id="test" type="text/html">
-    {{each tableListInfo as table}}
-              |@|<a href="{{gloab_base_url}}/t/{{table}}">{{table}}</a>
-     {{/each}}
-</script>
-<div id="roleDataGridToolButton">
-    <a name="remove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除</a>
-</div>
-<table id="roleDataGrid" width="100%"></table>
+        });
 
-<div>
-    <h2 align="left">在这输入sql脚本区</h2>
-    <li>select * from tableName limit 2</li>
-    <li>insert into tableName values (1,'zs')</li>
-    <li>delete from tableName where id=1</li>
-    <li>update tableName set name='zs',age=20 where id=1</li>
-    <textarea id="text_input" rows="10" cols="50"></textarea>
-    <input type="button" id="btn1" value="执行" style="background:green;color:red;">
-    <h2 align="left">输出区</h2>
-    <textarea id="text_output" rows="100" cols="100"></textarea>
+        app.post("/listAllTableName", function (req, res) {
+            const sql = `
+    show tables;
+    `;
+            M.doSql(sql, (d) => {
+                rows = d.data[0].map(u => {
+                    let o = {};
+                    o.tableName = Object.values(u)[0];
+                    return o;
+                })
+                res.send({rows});
+            })
 
-</div>
+        });
+        app.get("/delete",function (req,res) {
+            console.log(req.params.ids.toString());
+            ids="("+req.params.ids.toString()+")";
 
-</body>
-</html>
+            let sql=`
+       delete from ${M.currentTableName} where id in ${ids};
+    `;
+            M.doSql(sql,(d)=>{
+                r=d.data[0];
+                res.send(r);
+            })
+        });
+        /**
+         *后台服务结束
+         */
 
-<script>
-    main(gloab_base_url);
-    function main(baseUrl) {
-        function init(){
-            function initDataGrid(){
+        /**
+         *  前台js开始
+         */
+        (function() {
+            function init(){
                 var myColumns=[];
-                myColumns[0]=window.tableInfo.map(function (u) {
+                myColumns[0]=M.tableInfo.map(function (u) {
                     let obj={};
                     obj.field=u.column_name;
                     obj.title=u.column_name+"("+u.column_comment+")";
                     return obj;
                 });
                 myColumns[0]=[{checkbox:true},... myColumns[0]];
-                $('#roleDataGrid').datagrid({
-                    title:"通用数据展示",//继承于panel,在面板头部显示的标题文本。
-                    url:baseUrl+"/listByPage",
+                $('#resourceDataGrid').datagrid({
+                    url:"/listByPage",
                     width:10000,
                     rownumbers:true,//使能行号列
-                    toolbar:"#roleDataGridToolButton",//顶部显示的工具栏
                     pagination:true,//显示分页工具栏
-                    pageSize:10,//在设置分页属性的时候初始化页面大小。
-                    pageList:[5,7,10,20,30,50,70,100],//在设置分页属性的时候 初始化页面大小选择列表。
-                    //行样式
+                    pageSize:20,//在设置分页属性的时候初始化页面大小。
+                    pageList:[20,30,40,50],//在设置分页属性的时候 初始化页面大小选择列表。
                     rowStyler:function(rowIndex,rowData){
                         if(rowData.id%2==0){
                             return "background-color:pink";
                         }
                     },
-                    //列
                     columns:myColumns
                 });
             }
-            //事件绑定START
+//页面初始化
             $(function(){
+                init();//初始化DataGrid
+                $('#leftMeau').datagrid({
+                    url:"/listAllTableName",
+//pagination:true,//显示分页工具栏
+                    singleSelect:true,
+                    columns:[[
+                        {checkbox:false},
+                        {field:'tableName',title:'表名',width:200}
+                    ]],
+                    onClickRow:function (index, row) {
+                        var row = $('#leftMeau').datagrid("getSelections");
+                        M.currentTableName=row[0].tableName
+                        M.doSql(`SELECT column_name,column_type,column_comment FROM information_schema.COLUMNS WHERE TABLE_NAME='${M.currentTableName}' and TABLE_SCHEMA='${M.databaseName}';`,(d)=>{
+                            M.tableInfo=d.data[0];
+                            init();
+                        })
+
+                    }
+                });
                 //DataGrid删除按钮
-                $("#roleDataGridToolButton [name='remove']").click(function() {
-                    var row = $('#roleDataGrid').datagrid("getSelections");
+                $("#resourceDataGridToolButton [name='remove']").click(function() {
+                    var row = $('#resourceDataGrid').datagrid("getSelections");
                     if (row.length == 0) {
                         $.messager.alert('我的消息', '请先选择删除！', 'info');
                     } else {
                         $.messager.confirm('温馨提示', '确认删除选择的内容？', function(r) {
-                            if (r) {
-                                var ids = new Array();
-                                $(row).each(function() {
-                                    ids.push(this.id);
-                                })
-                                // console.log(ids);
-                                $.ajax({
-                                  //  async : false,
-                                    type : "GET",
-                                    url : baseUrl+"/delete/",
-                                    data: {ids},
-                                    success : function(data) {
-                                        if (data.success) {
-                                            $('#roleDataGrid').datagrid('reload');// 重新载入数据
-                                        } else {
-                                            $.messager.alert('我的消息', '删除失败！', 'info');
-                                        }
-                                    }
-                                });
+                            if(r){
+                                let ids=row.map(u=>u.id);
+                                M.IO.delete({ids});
+                                $('#resourceDataGrid').datagrid('reload');// 重新载入数据
                             }
                         });
                     }
                 });
             })
-//事件绑定END
-//页面初始化
-            $(function(){
-                initDataGrid();//初始化DataGrid
-            })
-        };
-        $.ajax({
-            async : false,
-            type : "GET",
-            url : baseUrl+"/getTableInfo",
-            success : function(data) {
-                if (data.success) {
-                    window.tableInfo= data.data;
-                    console.log(data.data)
-                    init();
-                } else {
-                    alert("加载失败")
-                }
-            }
-        });
 
-        $.ajax({
-           // async : false,
-            type : "GET",
-            url : baseUrl+"/listAlltableName",
-            success : function(data) {
-                if (data.success) {
-                    var tableListInfo=data.data;
-                   // console.log(data.data)
-                    var data = {
-                        gloab_base_url:gloab_base_url,
-                        tableListInfo:tableListInfo
-                    };
-                    var html = template('test', data);
-                    tableNameList.innerHTML = html;
-                } else {
-                    alert("加载失败")
-                }
-            }
-        });
-        btn1.onclick=function () {
-            $.ajax({
-               // async : false,
-                type : "GET",
-                url : baseUrl+"/doSql",
-                data: {sql:text_input.value},
-                success : function(data) {
-                    if (data) {
-                        text_output.value=JSON.stringify(data.data);
-                        $('#roleDataGrid').datagrid('reload');
-                    } else {
-                        alert("sql执行错误")
-                        $('#roleDataGrid').datagrid('reload');
-                    }
-                }
-            });
-        }
-    }
+        })();
 
-</script>
+        /**
+         *  前台js结束
+         */
+    </script>
+</head>
+
+
+
+<body class="easyui-layout">
+<!-- 左边的树状菜单 -->
+<div data-options="region:'west',title:'菜单'" style="width:200px;">
+    <table id="leftMeau" data-options="singleSelect:true,collapsible:true,url:'datagrid_data1.json',fitColumns:'true'"></table>
+</div>
+<!-- 中间的数据展示 -->
+<div id="center" data-options="region:'center',title:'数据展示'">
+    <!-- 资源管理按钮 -->
+    <div id="resourceDataGridToolButton">
+        <a name="remove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除</a>
+    </div>
+    <table id="resourceDataGrid" width="100%"></table>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
