@@ -5,172 +5,32 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>index</title>
-    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.net/Public/js/easyui/themes/default/easyui.css">
-    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.net/Public/js/easyui/themes/icon.css">
-    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
-    <script type="text/javascript" src="https://jihefu.github.io/js/jquery.easyui.min.js"></script>
-    <script src="https://minglie.github.io/js/M_mock.js"></script>
-    <script>
-        /**
-         *后台服务开始
-         */
-        M.host = "http://localhost:8888";
-        M.tableInfo = [];
-        M.currentTableName = "";
-        M.databaseName = "ming-lie"
-        app.post("/listByPage", function (req, res) {
-            if (!M.currentTableName) {
-                res.send([])
-                return;
-            }
-            const sql = `
-        select * from ${M.currentTableName}  limit ${(req.params.page - 1) * req.params.rows},${req.params.rows};
-        select count(1) c from ${M.currentTableName};
-        `;
-
-            M.doSql(sql, (d) => {
-                rows = d.data[0];
-                total = d.data[1][0].c;
-                res.send({rows, total});
-            })
-
-        });
-
-        app.post("/listAllTableName", function (req, res) {
-            const sql = `
-    show tables;
-    `;
-            M.doSql(sql, (d) => {
-                rows = d.data[0].map(u => {
-                    let o = {};
-                    o.tableName = Object.values(u)[0];
-                    return o;
-                })
-                res.send({rows});
-            })
-
-        });
-        app.get("/delete",function (req,res) {
-            console.log(req.params.ids.toString());
-            ids="("+req.params.ids.toString()+")";
-
-            let sql=`
-       delete from ${M.currentTableName} where id in ${ids};
-    `;
-            M.doSql(sql,(d)=>{
-                r=d.data[0];
-                res.send(r);
-            })
-        });
-        /**
-         *后台服务结束
-         */
-
-        /**
-         *  前台js开始
-         */
-        (function() {
-            function init(){
-                var myColumns=[];
-                myColumns[0]=M.tableInfo.map(function (u) {
-                    let obj={};
-                    obj.field=u.column_name;
-                    obj.title=u.column_name+"("+u.column_comment+")";
-                    return obj;
-                });
-                myColumns[0]=[{checkbox:true},... myColumns[0]];
-                $('#resourceDataGrid').datagrid({
-                    url:"/listByPage",
-                    width:10000,
-                    rownumbers:true,//使能行号列
-                    pagination:true,//显示分页工具栏
-                    pageSize:20,//在设置分页属性的时候初始化页面大小。
-                    pageList:[20,30,40,50],//在设置分页属性的时候 初始化页面大小选择列表。
-                    rowStyler:function(rowIndex,rowData){
-                        if(rowData.id%2==0){
-                            return "background-color:pink";
-                        }
-                    },
-                    columns:myColumns
-                });
-            }
-//页面初始化
-            $(function(){
-                init();//初始化DataGrid
-                $('#leftMeau').datagrid({
-                    url:"/listAllTableName",
-//pagination:true,//显示分页工具栏
-                    singleSelect:true,
-                    columns:[[
-                        {checkbox:false},
-                        {field:'tableName',title:'表名',width:200}
-                    ]],
-                    onClickRow:function (index, row) {
-                        var row = $('#leftMeau').datagrid("getSelections");
-                        M.currentTableName=row[0].tableName
-                        M.doSql(`SELECT column_name,column_type,column_comment FROM information_schema.COLUMNS WHERE TABLE_NAME='${M.currentTableName}' and TABLE_SCHEMA='${M.databaseName}';`,(d)=>{
-                            M.tableInfo=d.data[0];
-                            init();
-                        })
-
-                    }
-                });
-                //DataGrid删除按钮
-                $("#resourceDataGridToolButton [name='remove']").click(function() {
-                    var row = $('#resourceDataGrid').datagrid("getSelections");
-                    if (row.length == 0) {
-                        $.messager.alert('我的消息', '请先选择删除！', 'info');
-                    } else {
-                        $.messager.confirm('温馨提示', '确认删除选择的内容？', function(r) {
-                            if(r){
-                                let ids=row.map(u=>u.id);
-                                M.IO.delete({ids});
-                                $('#resourceDataGrid').datagrid('reload');// 重新载入数据
-                            }
-                        });
-                    }
-                });
-            })
-
-        })();
-
-        /**
-         *  前台js结束
-         */
-    </script>
+    <link rel="stylesheet" type="text/css" href="easyui/css/easyui.css">
+    <link rel="stylesheet" type="text/css" href="easyui/css/icon.css">
+    <link rel="stylesheet" type="text/css" href="css/index.css">
+    <script src="easyui/js/jquery.min.js"></script>
+    <script src="easyui/js/jquery.easyui.min.js"></script>
+    <script src="js/M_mock.js"></script>
+    <script src="js/M_database.js"></script>
+    <script src="js/downCsv.js"></script>
+    <script src="js/index.js"></script>
 </head>
-
-
-
 <body class="easyui-layout">
-<!-- 左边的树状菜单 -->
-<div data-options="region:'west',title:'菜单'" style="width:200px;">
+<div data-options="region:'north',title:'分组',split:true" style="height:100px;">
+    <div id="headList" class="menu"></div>
+</div>
+<div data-options="region:'west',title:'表'" style="width:500px;">
     <table id="leftMeau" data-options="singleSelect:true,collapsible:true,url:'datagrid_data1.json',fitColumns:'true'"></table>
 </div>
-<!-- 中间的数据展示 -->
 <div id="center" data-options="region:'center',title:'数据展示'">
-    <!-- 资源管理按钮 -->
-    <div id="resourceDataGridToolButton">
-        <a name="remove" href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除</a>
-    </div>
     <table id="resourceDataGrid" width="100%"></table>
+</div>
+<div data-options="region:'south',title:'配置分组',collapsed:true,expandMode:'float'"  style="width:200px;">
+    <input type="button" id="configGroupId" value="确认" style="background:green;color:red; float: left">
+    <textarea id="text_input" rows="40" cols="100"></textarea>
+</div>
+<div id="mm" class="easyui-menu" data-options="onClick:menuHandler" style="width:120px;">
+    <div data-options="name:'导出excel'">导出excel</div>
 </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
