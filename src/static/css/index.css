@@ -12,22 +12,24 @@ div.menu ul
 div.menu ul li
 {
     float:left; /* 向左漂移，将竖排变为横排 */
-    width:200px;
+    width:auto;
 }
 /* 所有class为menu的div中的ul中的a样式(包括尚未点击的和点击过的样式) */
 div.menu ul li a, div.menu ul li a:visited
 {
-    background-color: #00fff0; /* 背景色 */
+    background-color: #000000; /* 背景色 */
     border: 1px #f3f5f7 solid; /* 边框 */
-    color: #000000; /* 文字颜色 */
+    color: #ffffff; /* 文字颜色 */
     display: block; /* 此元素将显示为块级元素，此元素前后会带有换行符 */
-    line-height: 1.35em; /* 行高 */
+    line-height: 1em; /* 行高 */
     padding: 4px 20px; /* 内部填充的距离 */
     text-decoration: none; /* 不显示超链接下划线 */
     white-space: nowrap; /* 对于文本内的空白处，不会换行，文本会在在同一行上继续，直到遇到 <br> 标签为止。 */
-    margin-left:10px;
+    font-weight:bold;
+    margin-left:0px;
     text-align: center;
-
+    border:2px solid darkslategray;
+    border-radius:6px;
 }
 /* 所有class为menu的div中的ul中的a样式(鼠标移动到元素中的样式) */
 div.menu ul li a:hover
