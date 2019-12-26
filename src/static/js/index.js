@@ -2,6 +2,15 @@ M.disPlayTable=M_databaseJson["全部"];
 M.host = "";
 M.tableInfo = [];
 M.currentTableName = "";
+
+M.totalTableNums=0;
+
+M.doSql("show tables",(d)=>{
+    M.totalTableNums=d.data.length;
+})
+
+
+
 M.fetchGet("/getDataBaseName",(d)=>{ M.setAttribute("databaseName",d.data)})
 app.post("/listByPageMeta", function (req, res) {
     if (!M.currentTableName) {
@@ -23,7 +32,7 @@ app.post("/listByPageData", function (req, res) {
         return;
     }
     const sql1 = `
-select * from ${M.currentTableName}  limit ${(req.params.page - 1) * req.params.rows},${req.params.rows};
+select * from ${M.currentTableName} limit ${(req.params.page - 1) * req.params.rows},${req.params.rows};
 `;
     const sql2 = ` select count(1) c from ${M.currentTableName};`;
     M.doSql(sql1, (d) => {
@@ -44,8 +53,9 @@ app.post("/listAllTableName", function (req, res) {
             return o;
         });
         if(M.disPlayTable){
-            rows=rows.filter(o=>{return  M.disPlayTable.indexOf(o.TABLE_NAME)>-1})
+            rows=rows.filter(o=>{return M.disPlayTable.indexOf(o.TABLE_NAME)>-1})
         }
+        document.title=rows.length+"张表"
         res.send({rows});
     })
 });
@@ -89,11 +99,6 @@ function groupConfigInit(){
 
 
 
-
-
-
-
-
 function groupClick(e){
     M.disPlayTable=M_databaseJson[e];
     init();
@@ -104,7 +109,7 @@ function showMenu(e){
 
 async function menuHandler(item){
   // alert(M.exportGroupName)
-    let jsonData=  await getDowCsvContentByGroupName()
+    let jsonData= await getDowCsvContentByGroupName()
     downCsv(jsonData,M.exportGroupName+".csv")
 }
 
@@ -112,7 +117,14 @@ function headresourceDataGridInit(){
     let liList=`<ul id="test">`;
     let keyList=Object.keys(M_databaseJson)
     for(let i=0;i<keyList.length;i++){
-        liList+=`<li class="test"><a href="javascript:groupClick('${keyList[i]}');" oncontextmenu = showMenu('${keyList[i]}')>${keyList[i]}</a></li>`;
+        let key= keyList[i]
+        let len=0;
+        if(key=="全部"){
+            len=M.totalTableNums;
+        }else{
+            len=M_databaseJson[key]==undefined?0:M_databaseJson[key].length;
+        }
+        liList+=`<li class="test"><a href="javascript:groupClick('${key}');" oncontextmenu = showMenu('${key}')>${key+" "+len}</a></li>`;
     }
     liList+=`</ul>`;
     $("#headList").html(liList)
@@ -133,7 +145,7 @@ function resourceDataGridInit(){
             rownumbers:true,//使能行号列
             pagination:true,//显示分页工具栏
             pageSize:20,//在设置分页属性的时候初始化页面大小。
-            pageList:[20,30,40,50],//在设置分页属性的时候 初始化页面大小选择列表。
+            pageList:[20,30,40,50,500,5000,50000],//在设置分页属性的时候 初始化页面大小选择列表。
             rowStyler:function(rowIndex,rowData){
                 if(rowData.id%2==0){
                     return "background-color:pink";
@@ -147,10 +159,10 @@ function resourceDataGridInit(){
             width:10000,
             rownumbers:true,
             columns:[[
-                {checkbox:false},
-                {field:'COLUMN_NAME',title:'列名',width:200},
-                {field:'COLUMN_TYPE',title:'类型',width:200},
-                {field:'column_comment',title:'说明',width:200}
+                {checkbox:true},
+                {field:'COLUMN_NAME',title:'列名'},
+                {field:'COLUMN_TYPE',title:'类型'},
+                {field:'column_comment',title:'说明'}
             ]]
         });
 
@@ -164,13 +176,13 @@ function leftMeauInit(){
         selectOnCheck: true,
         columns:[[
             {checkbox:false},
-            {field:'TABLE_NAME',title:'表名',width:250,
+            {field:'TABLE_NAME',title:'表名',width:280,
                 formatter: function(value,row,index){
                     var str = `<a href='javascript:void(0)' type='${row.TABLE_NAME}' onclick='TABLE_NAME_Click(this)'>${row.TABLE_NAME}</a>`;
                     return str;
                 }
             },
-            {field:'TABLE_COMMENT',title:'说明',width:250,
+            {field:'TABLE_COMMENT',title:'说明',width:420,
                 formatter: function(value,row,index){
                     if(!row.TABLE_COMMENT){
                         row.TABLE_COMMENT="无名"
@@ -183,7 +195,7 @@ function leftMeauInit(){
     });
 }
 
-async function  getDowCsvContentByGroupName() {
+async function getDowCsvContentByGroupName() {
      let rowList=[];
      let blankLine={r1:'', r2:'', r3:''}
      let d= await MIO.listAllTableName();
@@ -217,9 +229,5 @@ function init(){
 
 $(function(){
     init();
-    $("#configGroupId").click(function () {
-        M.fetchPost("/groupConfig",(d)=>{alert(d.success)},{
-            d:text_input.value
-        })
-    });
 })
+

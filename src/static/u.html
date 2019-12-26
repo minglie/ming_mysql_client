@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>u</title>
+    <style type="text/css">
+        #text_input {
+            width: 50%;
+            font-size: 18px;
+            line-height: 1;
+            background: rgba(100, 200, 50, 0.3);
+        }
+
+        #text_output {
+            font-size: 18px;
+            width: 100%;
+            line-height: 1;
+            background: rgba(200, 100, 50, 0.3);
+        }
+    </style>
+    <script src="easyui/js/jquery.min.js"></script>
+    <script src="js/M_database.js"></script>
+</head>
+<body>
+
+<br/>
+
+<input type="button" id="btn1" value="执行" style=" width: 100px; height: 50px; background:green;color:red;">
+<hr>
+<textarea id="text_input" rows="25" style=" width: 1000px; height: 5000px"></textarea>
+
+
+
+<script>
+     M = {};
+  M.host="";
+    text_input.value=JSON.stringify(M_databaseJson,null, 2);
+    btn1.onclick = function () {
+        var text=text_input.value;
+        try{
+            JSON.parse(text);
+            $.ajax({
+             type: "post",
+             url: M.host+ "/groupConfig",
+             data: text,
+             dataType: "json",
+             success: function(data){
+                 //document.title=data.message;
+                 alert(data.message);
+              },
+              error:function(e){
+                console.error(e);
+              }
+          });
+
+
+        }catch(e){
+            alert("json 不合法")
+        }
+      
+    };
+
+</script>
+
+
+</body>
+</html>
