@@ -1,1 +1,0 @@
-bigint(20)		父部门id	varchar(512)		父级ids	varchar(45)		简称	varchar(255)		全称	varchar(255)		描述	sint(11)		版本（乐观锁保留字段）	int(11)		排序	datetime		创建时间	datetime		修改时间	bigint(20)		创建人	bigint(20)		修改人	

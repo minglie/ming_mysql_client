@@ -54,6 +54,7 @@ app.post("/listAllTableName", function (req, res) {
         });
         if(M.disPlayTable){
             rows=rows.filter(o=>{return M.disPlayTable.indexOf(o.TABLE_NAME)>-1})
+            rows=rows.sort((a,b)=>M.disPlayTable.indexOf(a.TABLE_NAME)-M.disPlayTable.indexOf(b.TABLE_NAME)) 
         }
         document.title=rows.length+"张表"
         res.send({rows});
