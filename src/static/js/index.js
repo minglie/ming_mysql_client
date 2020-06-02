@@ -101,7 +101,11 @@ function groupConfigInit(){
 
 
 function groupClick(e){
+
     M.disPlayTable=M_databaseJson[e];
+
+    M.setAttribute("disPlayTable",M.disPlayTable);
+    
     init();
 }
 function showMenu(e){
@@ -220,7 +224,7 @@ async function getDowCsvContentByGroupName() {
 
 function init(){
     groupConfigInit();
-    rightClickInit();
+    //rightClickInit();
     headresourceDataGridInit();
     resourceDataGridInit();//初始化DataGrid
     leftMeauInit();
