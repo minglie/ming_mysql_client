@@ -104,7 +104,7 @@ function groupClick(e){
 
     M.disPlayTable=M_databaseJson[e];
 
-    M.setAttribute("disPlayTable",M.disPlayTable);
+    localStorage.disPlayTable=JSON.stringify(M.disPlayTable)
     
     init();
 }
@@ -233,6 +233,15 @@ function init(){
 
 
 $(function(){
-    init();
-})
+    let g= decodeURI(M.getParameter("g")) 
+    let t= M.getParameter("t")
 
+    console.log("g_t",g,t)
+
+    if(g){
+       groupClick(g)
+       if(t){
+           TABLE_COMMENT_Click({"type":t})
+       }
+    }
+})

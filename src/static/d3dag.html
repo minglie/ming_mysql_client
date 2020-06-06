@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,14 +26,13 @@
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="./js/M_utils.js"></script>
     <script src="./js/M_mock.js"></script>
-    <!-- <script src="./js/tg.js"></script> -->
-    <!-- <script src="./js/M_database.js"></script> -->
+    <!-- <script src="../../lib/js/tg.js"></script> -->
 </head>
 
 <script>
 
 var tg={};
-
+var dag_type=M.getParameter("type");
 
 </script>
 
@@ -43,7 +43,7 @@ var tg={};
         $(document).ready(function () {
             tg.tableList={};
             tg.links=[];
-            M.disPlayTable=M.getAttribute('disPlayTable');    
+            M.disPlayTable=JSON.parse(localStorage.disPlayTable)||{};    
             const sql = `SELECT TABLE_NAME,TABLE_COMMENT FROM information_schema.TABLES WHERE table_schema='${M.getAttribute("databaseName")}';`;
                 M.doSql(sql, (d) => {
                     rows = d.data.map(u => {
@@ -52,7 +52,7 @@ var tg={};
                         o.TABLE_COMMENT=u["TABLE_COMMENT"];
                         return o;
                     });
-                    if(M.disPlayTable){
+                    if(false && M.disPlayTable){
                         rows=rows.filter(o=>{return M.disPlayTable.indexOf(o.TABLE_NAME)>-1})
                         rows=rows.sort((a,b)=>M.disPlayTable.indexOf(a.TABLE_NAME)-M.disPlayTable.indexOf(b.TABLE_NAME)) 
                     }
@@ -82,9 +82,32 @@ var tg={};
                         let o={};
                         o.source=rows[i].table_name;
                         o.relation=rows[i].column_re || '';
-                        o.target=o.relation.split(".")[0] || '';
-                        tg.links.push(o);
+                        if(o.relation.includes("或")){
+                            let relationList=o.relation.split("或");
+                             //console.log(">>>>>>>>",relationList)
+                             for(let j=0;j<relationList.length;j++){
+                                 let o1={}
+                                 o1.source=o.source;
+                                 o1.relation=relationList[j];
+                                 o1.target=o1.relation.split(".")[0] || '';
+
+                                 if(dag_type=="bibao"){
+                                    //console.log(">>>>>>O1",o1);
+                                    tg.links.push(o1);
+                                 }else{
+                                    if(M.disPlayTable.indexOf(o1.target)==-1) {
+                                         continue;
+                                    } else{  tg.links.push(o1); }
+                                 }
+                             }
+                        }else{
+                           o.relation=rows[i].column_re || '';
+                           o.target=o.relation.split(".")[0] || '';
+                           tg.links.push(o);
+                        }
                     }
+
+                    //console.log("AAAAAAA",tg);
 
                     showChart();
                 })
